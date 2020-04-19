@@ -62,7 +62,7 @@ public:
     typedef typename T::pcontainer_t pcontainer_t;
 
     container_t keys;
-    pcontainer_t ptrs;
+    BNode *ptrs;
     std::size_t  order;
     int n;
     bool isLeaf;
@@ -176,7 +176,7 @@ public:
         }
     }
 
-    bool find(BNode<T,S> *bn = root, const value_t val = 0) const {
+    bool find(BNode<T,S> *bn, const value_t val = 0) const {
         // TODO :: SEARCH
         // search(x); inside each page
         int i = 0;
