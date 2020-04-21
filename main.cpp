@@ -57,7 +57,7 @@ class BNode {
 public:
     typedef typename T::value_t value_t;
     typedef typename T::container_t container_t;
-    typedef typename T::iterador_t iterator_t;
+    //typedef typename T::iterador_t iterator_t;
     typedef std::vector< BNode<T,S>* > pcontainer_t;
 
     container_t keys;
@@ -151,6 +151,14 @@ public:
         n += 1;
             
     }
+
+    std::ostream &printNode(std::ostream &out) {
+        for (auto x : keys) {
+            out << x << " ";
+        }
+        out << std::endl;
+        return out;
+    }
 };
 
 template <typename T, int S>
@@ -162,7 +170,7 @@ public:
     typedef typename T::print_t print_t;
 
     BNode<T,S>* root;
-    print_t print;
+    //print_t print;
     functor_t search;
 
     BTree(void):root(NULL) {}
@@ -192,7 +200,7 @@ public:
         }
     }
 
-    bool find(const value_t = 0) const{
+    bool find(const value_t val = 0) const{
         if (root == NULL) {
             return false;
         } else {
@@ -200,9 +208,45 @@ public:
         }
     }
 
+    std::ostream &printSingleLevel(std::ostream &out, BNode<T,S> *root, int level) {
+        if (root == NULL) {
+            return out;
+        }
+        if (level == 1) {
+            root->printNode();
+        } else if (level > 1) {
+            for (auto x : root->ptrs) {
+                printSingleLevel(out, x, level - 1);
+            }
+        }
+        return out;
+    }
+
+    int height(BNode<T,S> *node) {
+        if (node == NULL) {
+            return 0;
+        } else {
+            std::floor(std::log((node->n + 1) / 2) / std::log(node->order))
+        }
+    }
+
+    std::ostream &printLevels (std::ostream &out, BNode<T,S> *root) {
+        int h = height(root);
+        for (int i = 1; i <= h; i++) {
+            printSingleLevel(out, root, i);
+            out << std::endl;
+        }
+        return out;
+    }
+
+    std::ostream &print(std::ostream &out) {
+        out << printLevels(out, root);
+        return out;
+    }
+
     template <typename _T, int _S>
-    friend std::ostream& operator<<(std::ostream& out, BTree<_T,_S> tree){
-        tree.print();// (out)
+    friend std::ostream& operator<<(std::ostream &out, BTree<_T,_S> tree){
+        out = tree.print(out);// (out)
         // IN PRE POST LEVEL ORDER
         return out;
     }
@@ -215,7 +259,7 @@ int main() {
     tree.find(10);
     std::cout<<tree<< std::endl;
 
-    typedef SS_Traits<float> strait_t;
+    /*typedef SS_Traits<float> strait_t;
     BTree<strait_t,10> stree; 
-    std::cout<<stree<< std::endl;
+    std::cout<<stree<< std::endl;*/
 }
