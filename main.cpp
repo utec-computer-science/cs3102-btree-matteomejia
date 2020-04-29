@@ -1,265 +1,346 @@
-#include <iostream>
-#include <vector> 
-#include <math.h>
+#include <bits/stdc++.h>
 
-template <typename T>
-class SS_Traits{
+#define BST_NODE_FLAGXX 1
+#define B_NODE_FLAGXX 2
+
+class BSTNodeTraits{
 public:
-    typedef T  value_t;
-    typedef std::vector<value_t> container_t;
-    typedef typename container_t::iterator iterator_t;
-  
-    class simple_search{
-    public:
-        int operator() (container_t a, value_t v){
-            return 0;
-        }
-    };
-
-    class post_order_print{
-    public:
-        void operator() (void){
-            std::cout << "post order" << std::endl;
-        }
-    };
-
-    typedef simple_search functor_t;
-    typedef post_order_print print_t;
+    typedef int value_t;
 };
 
-template <typename T>
-class BS_Traits{
+class BSTNode : public BSTNodeTraits{
+    public: 
+    typedef typename  BSTNodeTraits::value_t value_t;
+
+    value_t data;
+    BSTNode **children;
+
+    BSTNode(value_t data){
+        children = new BSTNode*[2] {nullptr};
+        this->data = data;
+    }
+
+    ~BSTNode(void) {}
+};
+
+class BSTNodeTraitsF: public BSTNodeTraits{
 public:
-    typedef T  value_t;
-    typedef std::vector<value_t> container_t;
-    typedef typename container_t::iterator iterator_t;
-  
-    class binary_search{
-    public:
-        int operator() (container_t a, value_t v){
-            return 0;
+    typedef int value_t;
+
+    class functor{
+        void operator()(){
+            return;
         }
     };
 
-    class pre_order_print{
-    public:
-        void operator() (void){
-            std::cout << "pre order" << std::endl;
-        }
-    };
-
-    typedef binary_search functor_t;
-    typedef pre_order_print print_t;
+    typedef functor functor_t;
 };
 
-template <typename T, int S> 
-class BNode {
-public:
-    typedef typename T::value_t value_t;
-    typedef typename T::container_t container_t;
-    //typedef typename T::iterador_t iterator_t;
-    typedef std::vector< BNode<T,S>* > pcontainer_t;
-
-    container_t keys;
-    pcontainer_t ptrs;
-    std::size_t  order;
-    std::size_t n;
-    bool isLeaf;
-
-    BNode(bool leaf):order(S) {
-        keys = container_t(order,0);
-        ptrs = pcontainer_t(order,NULL);
-        n = 0;
-        isLeaf = leaf;
-    }
-
-    ~BNode(void) {}
-
-    bool search(int val) {
-        int i = 0;
-        while (i < n && val > keys[i]) {
-            i++;
-        }
-
-        if (keys[i] == val) {
-            return true;
-        }
-
-        if (isLeaf) {
-            return false;
-        }
-
-        return ptrs[i]->search(val);
-    }
-
-    void insertNonFull(T val) {
-        int i = n - 1;
-
-        if (isLeaf) {
-            while (i >= 0 && keys[i] > val) {
-                keys[i + 1] = keys[i];
-                i--;
-            }
-
-            keys[i + 1] = val;
-            n += 1;
-        } else {
-            while (i >= 0 && keys[i] > val) {
-                i--;
-            }
-
-            if (ptrs[i + 1]->n == order) {
-                splitChild(i + 1, ptrs[i + 1]);
-
-                if (keys[i + 1] < val) {
-                    i++;
-                }
-            }
-
-            ptrs[i + 1]->insertNonFull(val);
-        }
-    }
-
-    void splitChild(int i, BNode<T,S> *b) {
-        BNode<T,S> *x = new BNode<T,S>(b->isLeaf);
-        x->n = std::ceil(order/2) - 1;
-
-        for (int j = 0; j < std::ceil(order/2) - 1; j++) {
-            x->keys[j] = b->keys[j + x->n];
-        }
-
-        if (!b->isLeaf) {
-            for (int j = 0; j < std::ceil(order/2); j++) {
-                x->ptrs[j] = b->ptrs[j + x->n];
-            }
-        }
-
-        b->n = std::ceil(order/2) - 1;
-
-        for (int j = n; j >= i + 1; j--) {
-            ptrs[j + 1] = ptrs[j]; 
-        }
-
-        ptrs[i + 1] = x;
-
-        for (int j = n - 1; j >= i; j--) {
-            keys[j + 1] = keys[j];
-        }
-
-        keys[i] = b->keys[std::ceil(order/2) - 1];
-
-        n += 1;
-            
-    }
-
-    std::ostream &printNode(std::ostream &out) {
-        for (auto x : keys) {
-            out << x << " ";
-        }
-        out << std::endl;
-        return out;
-    }
-};
-
-template <typename T, int S>
-class BTree {
+class BSTNodeF : public BSTNodeTraitsF{
 public: 
-    typedef typename T::value_t value_t;
-    typedef typename T::container_t container_t;
-    typedef typename T::functor_t functor_t;
-    typedef typename T::print_t print_t;
+    typedef typename  BSTNodeTraitsF::value_t value_t;
 
-    BNode<T,S>* root;
-    //print_t print;
-    functor_t search;
+    value_t data;
+    BSTNode **children;
 
-    BTree(void):root(NULL) {}
-
-    ~BTree(void){}
-
-    void insert(const value_t& val = 0){
-        // TODO :: INSERT
-        if (root == NULL) {
-            root = new BNode<T,S>(true);
-            root->keys[0] = val;
-            root->n += 1;
-        } else {
-            if (root->n == root->order) {
-                BNode<T,S> *b = new BNode<T,S>(false);
-
-                b->ptrs[0] = root;
-                b->splitChild(0, root);
-
-                int i = 0;
-                if (b->keys[0] < val) {
-                    i++;
-                }
-
-                b->ptrs[i]->insertNonFull(val);
-            }
-        }
+    BSTNodeF(value_t data){
+        children = new BSTNode*[2] {nullptr};
     }
 
-    bool find(const value_t val = 0) const{
-        if (root == NULL) {
-            return false;
-        } else {
-            return root->search(val);
-        }
-    }
-
-    std::ostream &printSingleLevel(std::ostream &out, BNode<T,S> *root, int level) {
-        if (root == NULL) {
-            return out;
-        }
-        if (level == 1) {
-            root->printNode();
-        } else if (level > 1) {
-            for (auto x : root->ptrs) {
-                printSingleLevel(out, x, level - 1);
-            }
-        }
-        return out;
-    }
-
-    int height(BNode<T,S> *node) {
-        if (node == NULL) {
-            return 0;
-        } else {
-            std::floor(std::log((node->n + 1) / 2) / std::log(node->order))
-        }
-    }
-
-    std::ostream &printLevels (std::ostream &out, BNode<T,S> *root) {
-        int h = height(root);
-        for (int i = 1; i <= h; i++) {
-            printSingleLevel(out, root, i);
-            out << std::endl;
-        }
-        return out;
-    }
-
-    std::ostream &print(std::ostream &out) {
-        out << printLevels(out, root);
-        return out;
-    }
-
-    template <typename _T, int _S>
-    friend std::ostream& operator<<(std::ostream &out, BTree<_T,_S> tree){
-        out = tree.print(out);// (out)
-        // IN PRE POST LEVEL ORDER
-        return out;
-    }
+    ~BSTNodeF(void) {}
 
 };
+
+class BNodeTraits{
+public:
+    typedef int value_t;
+    typedef std::vector<value_t> container_t;
+};
+
+class BNode : public BNodeTraits{
+public: 
+    typedef typename  BNodeTraits::value_t value_t;
+    typedef typename  BNodeTraits::container_t container_t;
+
+    container_t data;
+    BNode **children;
+    bool isFull;
+    int n, order;
+    BNode **parent;
+
+    BNode(){
+        children = new BNode*[4] {nullptr};
+        isFull = false;
+        n = 0;
+        order = 3;
+        parent = nullptr;
+    }
+
+    BNode(value_t &val){
+        children = new BNode*[4] {nullptr};
+        isFull = false;
+        n = 1;
+        order = 3;
+        parent = nullptr;
+        this->data.push_back(val);
+    }
+
+    int insert(const value_t &val) {
+        data.push_back(val);
+        std::sort(data.begin(), data.end());
+        n++;
+        
+        if (n == order) {
+            isFull = true;
+        }
+
+        int pos = 0;
+        for (value_t value : data) {
+            if (val > value) {
+                pos++;
+            }
+        }
+        return pos;
+    }
+
+    BNode *leftChild() {
+        BNode *node = new BNode(data[0]);
+        children[0] != nullptr ? node->children[0] = children[0] : NULL;
+        children[1] != nullptr ? node->children[1] = children[1] : NULL;
+        return node;
+    }
+
+    BNode *rightChild() {
+        BNode *node = new BNode(data[2]);
+        node->insert(this->data[3]); 
+        children[2] != nullptr ? node->children[0] = children[2] : NULL;
+        children[3] != nullptr ? node->children[1] = children[3] : NULL;
+        return node;
+    }
+
+    ~BNode(void){}
+
+};
+
+template <typename Node>
+struct NodeTraits{
+    static const int  flag_type = 0;
+};
+
+template <>
+struct NodeTraits< BSTNode >{
+    static const int  flag_type = BST_NODE_FLAGXX;
+};
+
+
+template <> 
+struct NodeTraits< BNode >{
+    static const int  flag_type = B_NODE_FLAGXX;
+};
+
+template<typename  Node, int Flag>
+struct TreeHelper{
+    typedef Node  node_t;
+    typedef typename node_t::value_t value_t;
+  
+    static void  insert (node_t** head, const value_t& val){
+        std::cout << "el tipo de dato no es compatible" << std::endl;
+    }
+
+    static void  print (node_t** head){
+    
+    }
+};
+
+template<>
+struct TreeHelper<BSTNode,BST_NODE_FLAGXX>{
+    typedef BSTNode  node_t;
+    typedef typename node_t::value_t value_t;
+  
+    static void  insert (node_t** head, const value_t& val){
+        node_t **curr = head;
+        node_t **next = head;
+    
+        if ((*head) == nullptr) {
+            *head = new node_t(val);
+        } else {
+            while((*next) != nullptr) {
+                curr = next;
+                if ((*curr)->data > val) {
+                    next = &((*curr)->children[0]);
+                } else {
+                    next = &((*curr)->children[1]);
+                }
+            }
+            *next = new node_t(val);
+        }  
+        std::cout << "Insertando nodo BST hoja" << std::endl;
+    }
+
+    static void print (node_t** head){
+        std::stack<node_t*> nodes;
+        node_t *curr = *head;
+        while(curr != nullptr) {
+            std::cout << "Node: " << curr->data << std::endl;
+            if (curr->children[1] != nullptr) {
+                nodes.push(curr->children[1]);
+            }
+
+            if (curr->children[0] != nullptr) {
+                curr = curr->children[0];
+            } else {
+                if (!nodes.empty()) {
+                    curr = nodes.top(); 
+                    nodes.pop();
+                } else {
+                    curr = nullptr;
+                }
+            } 
+        }
+    }
+};
+
+template<>
+struct TreeHelper<BNode,B_NODE_FLAGXX> {
+    typedef BNode  node_t;
+    typedef typename node_t::value_t value_t;
+    typedef typename node_t::container_t container_t;
+  
+    static int find (const container_t& container, const value_t& val) {
+        int i = 0;
+        for (auto value : container) {
+            if (value < val) 
+                i++; 
+        }
+        return i;
+    }
+
+    static void  insert (node_t** head, const value_t& val) {
+        node_t *curr = *head;
+        node_t *next = *head;
+        
+        if ((*head) == nullptr) {
+            *head = new node_t;
+            (*head)->insert(val);
+        } else {
+            while(next != nullptr) {
+                curr = next;
+                next = curr->children[find(curr->data, val)];
+            }
+      
+            if (!curr->isFull) {
+                curr->insert(val);
+            } else {
+                curr->insert(val);
+
+                node_t *left = curr->leftChild();
+                node_t *right = curr->rightChild();
+      
+                if (curr->parent == nullptr) {
+                    node_t *parent = new node_t;
+                    parent->insert(curr->data[1]);
+                    parent->children[0] = left;
+                    parent->children[1] = right;
+                    *head = &*parent;
+                    left->parent = head;
+                    right->parent = head;
+                } else {
+                    node_t *parent = *(curr->parent);
+                    parent->children[parent->insert(curr->data[1]) + 1] = left;
+                    parent->children[parent->insert(curr->data[1])] = right;  
+                }
+            } 
+        }
+        std::cout << "Insertando para un nodo B" << std::endl;
+    }
+
+    static void  print (node_t** head){
+        node_t *curr = *head;
+        container_t container = curr->data;
+        BNode **children = curr->children;
+        std::cout << "Node: ";
+
+        if (container.size() > 1) {
+            for (int i = 0; i < container.size() - 1; i++) {
+                std::cout << container[i] << ", ";
+            }
+            std::cout << container[container.size() - 1];
+        } else {
+            std::cout << container[0];
+        }
+
+        std::cout << std::endl;
+        for (int i = 0; i < 4; i++) {
+            if (children[i] != nullptr) {
+                print(&(*head)->children[i]);
+            }
+        }
+    }
+};
+
+template <typename Node>
+class Tree{
+public:
+    typedef Node node_t;
+    typedef typename node_t::value_t value_t;
+
+    node_t* root;
+
+    Tree(void):root(nullptr){
+        std::cout << NodeTraits<node_t>::flag_type << std::endl;
+    }
+
+    void insert(const value_t& val){
+        add<NodeTraits<node_t>::flag_type>(&root,val);
+    }
+  
+    void print() {
+        show<NodeTraits<node_t>::flag_type>(&root);
+    }
+
+    template <int Flag> 
+    void add(node_t**, const value_t&);
+
+    template <int Flag>
+    void show(node_t**);
+
+    ~Tree(void){}
+};
+
+template<typename Node> template <int Flag>
+void Tree<Node>::add(
+    typename Tree<Node>::node_t ** root, 
+    const typename Tree<Node>::value_t & val){
+    TreeHelper<Tree<Node>::node_t,Flag>::insert(root,val);
+}
+
+template<typename Node> template <int Flag>
+void Tree<Node>::show(typename Tree<Node>::node_t **root) {
+    TreeHelper<Tree<Node>::node_t,Flag>::print(root);
+}
 
 int main() {
-    typedef BS_Traits<int> btrait_t;
-    BTree<btrait_t,4> tree;
-    tree.find(10);
-    std::cout<<tree<< std::endl;
+    typedef BSTNode bst_int_node;
+    typedef BNode b_int_node;
+    typedef Tree<bst_int_node> bst_tree;
+    typedef Tree<b_int_node> b_tree;
 
-    /*typedef SS_Traits<float> strait_t;
-    BTree<strait_t,10> stree; 
-    std::cout<<stree<< std::endl;*/
+    bst_tree bst;
+    b_tree bt;
+
+    bst.insert(10);
+    bst.insert(15);
+    bst.insert(5);
+    bst.insert(25);
+    bst.insert(20);
+    std::cout << "Imprimiendo BST: " << std::endl;
+    bst.print();
+
+    bt.insert(10);
+    bt.insert(15);
+    bt.insert(5);
+    bt.insert(25);
+    bt.insert(20);
+    std::cout << "Imprimiendo BT: " << std::endl;
+    bt.print();
 }
