@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include <vector>
+#include <algorithm>
 #include "Macros.h"
 using namespace std;
 
@@ -27,18 +28,18 @@ public:
     parent = nullptr;
   }
   
-  int insertToContainer(value_t value){
-    int index = sizeOfContainer - 1;
+  int insertToContainer(value_t val){
+    this->data.push_back(val);
+    sort(this->data.begin(), this->data.end());
+    this->sizeOfContainer++;
 
-    while(index >= 0 && data[index] > value){
-      data[++index] = data[index];
-      index--;
+    int pos = 0;
+    for (value_t value : data) {
+      if (val > value) {
+        pos++;
+      }
     }
-
-    data[++index] = value;
-    sizeOfContainer++;
-
-    return index;
+    return pos;
   }
 
   bool isContainerFull(){
